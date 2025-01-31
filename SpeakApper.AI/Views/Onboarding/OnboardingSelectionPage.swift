@@ -15,7 +15,8 @@ struct OnboardingSelectionPage: View {
     @State private var selectedOption: String?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .trailing, spacing: 16) {
+            
             HStack {
                 Button(action: {
                     // Логика пропуска онбординга
@@ -23,20 +24,19 @@ struct OnboardingSelectionPage: View {
                     Text("Пропустить")
                         .foregroundColor(.gray)
                         .font(.system(size: 16))
+                        .padding(.trailing)
                 }
             }
-            .padding(.trailing)
-
-            
+            Spacer()
             Text(title)
                 .multilineTextAlignment(.center)
                 .font(.title2)
                 .bold()
                 .foregroundColor(.white)
-                .padding()
+             
             Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.gray)
+                .font(.system(size: 14))
+                .foregroundColor(Color("subtitle"))
                 .padding(.horizontal)
             
          
@@ -46,10 +46,9 @@ struct OnboardingSelectionPage: View {
                         selectedOption = option.title
                     }) {
                         ZStack {
-                            
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(Color("DarkGray").opacity(0.8))
-                                .frame(height: 80)
+                                .fill(Color("cardColor").opacity(0.8))
+                                .frame(width: 172, height: 89)
                                 .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 2)
                             
                             HStack {
@@ -58,9 +57,10 @@ struct OnboardingSelectionPage: View {
                                     .scaledToFit()
                                     .frame(width: 24, height: 24)
                                     .foregroundColor(.white)
+                                    .padding(.trailing, 6)
 
                                 Text(option.title)
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 14))
                                     .foregroundColor(.white)
                                     .multilineTextAlignment(.leading)
 
@@ -68,23 +68,22 @@ struct OnboardingSelectionPage: View {
                             }
                             .padding(.leading, 12)
                             
-                            
                             if selectedOption == option.title {
                                 VStack {
                                     HStack {
                                         Spacer()
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.purple)
+                                            .foregroundColor(Color("CircleColor"))
                                     }
                                     Spacer()
                                 }
                                 .padding(8)
                             }
                         }
-                        .frame(maxWidth: .infinity, minHeight: 80)
+                        .frame(maxWidth: .infinity, minHeight: 89)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(selectedOption == option.title ? Color.blue : Color.clear, lineWidth: 2)
+                                .stroke(selectedOption == option.title ? Color("CircleColor"): Color.gray, lineWidth: 0.5)
                         )
                     }
                 }

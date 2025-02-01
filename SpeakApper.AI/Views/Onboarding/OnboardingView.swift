@@ -22,7 +22,7 @@ struct OnboardingView: View {
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .gesture( // Отключаем свайпы (кроме Onboarding 3)
+                    .gesture( // Отключаем свайпы кроме Onboarding 3
                         DragGesture().onChanged { _ in
                             if viewModel.currentPage != 2 { }
                         }
@@ -54,6 +54,9 @@ struct OnboardingView: View {
                 
             }
         }.background(Color("BackgroundColor").ignoresSafeArea())
+            .fullScreenCover(isPresented: $viewModel.showPaywall) {
+                PaywallView()
+            }
     }
 }
 

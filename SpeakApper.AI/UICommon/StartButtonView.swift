@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct StartButtonView: View {
-    @ObservedObject var viewModel: OnboardingViewModel 
-
+    @ObservedObject var viewModel: OnboardingViewModel
+    
     var body: some View {
         Button(action: {
-            viewModel.nextPage()
+            if viewModel.currentPage == 4 {  
+                viewModel.showPaywall = true
+            } else {
+                viewModel.nextPage()
+            }
         }) {
             Text("Продолжить")
                 .bold()

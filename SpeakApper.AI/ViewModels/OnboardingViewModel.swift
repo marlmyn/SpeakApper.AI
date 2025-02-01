@@ -9,7 +9,8 @@ import SwiftUI
 class OnboardingViewModel: ObservableObject {
     @Published var currentPage = 0
     @Published var selectedCategory: String?
-
+    @Published var showPaywall = false
+    
     @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
 
     let steps: [AnyView] = [
@@ -51,7 +52,7 @@ class OnboardingViewModel: ObservableObject {
         if currentPage < steps.count - 1 {
             currentPage += 1
         } else {
-            hasSeenOnboarding = true
+            showPaywall = true
         }
     }
 }

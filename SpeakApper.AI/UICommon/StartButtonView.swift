@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct StartButtonView: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    @ObservedObject var viewModel: OnboardingViewModel 
 
     var body: some View {
         Button(action: {
             viewModel.nextPage()
         }) {
-            Text(viewModel.currentPage < viewModel.steps.count - 1 ? "Продолжить" : "Начать")
-                .padding(16)
-                .frame(maxWidth: .infinity)
-                .background(viewModel.currentPage < viewModel.steps.count - 1 ? Color("ButtonColor") : Color("ButtonColor"))
-                .cornerRadius(8)
+            Text("Продолжить")
                 .bold()
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color("ButtonColor"))
                 .foregroundColor(.white)
+                .cornerRadius(12)
                 .padding(.horizontal, 16)
         }
     }

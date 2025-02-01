@@ -1,12 +1,14 @@
 //
-//  OnboardingSelectionPage.swift
+//  OnboardingPurposePage.swift
 //  SpeakApper.AI
 //
-//  Created by Akmaral Ergesh on 30.01.2025.
+//  Created by Akmaral Ergesh on 01.02.2025.
 //
+
+import Foundation
 import SwiftUI
 
-struct OnboardingSelectionPage: View {
+struct OnboardingPurposePage: View {
     let title: String
     let subtitle: String
     let options: [OptionModel]
@@ -14,47 +16,43 @@ struct OnboardingSelectionPage: View {
     @Binding var currentPage: Int
     @State private var selectedOption: String?
     
-    
-        var body: some View {
-                VStack {
-                    
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            //
-                        }) {
-                            Text("Пропустить")
-                                .foregroundColor(.gray)
-                                .font(.system(size: 17))
-                        }
-                        .padding(.trailing)
-                    }
-                    .padding(.top, 10)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(title)
-                            .padding(.top, 40)
-                            .font(.system(size: 21, weight: .bold))
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.bottom, 16)
-                        
-                        Text(subtitle)
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundColor(Color("subtitle"))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.bottom, 16)
-                    }
-                    .padding(.horizontal, 24)
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Spacer()
+                Button(action: {
+                    currentPage += 1
+                }) {
+                    Text("Пропустить")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 17))
+                }
+                .padding(.trailing)
+            }
+            .padding(.top, 10)
+          
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .padding(.top, 40)
+                    .font(.system(size: 21, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 16)
+                Text(subtitle)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(Color("subtitle"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 10)
+            }
+            .padding(.horizontal, 12)
             
+            
+            // Category Card
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 17), GridItem(.flexible(), spacing: 17)], spacing: 17)  {
                 ForEach(options, id: \.title) { option in
                     Button(action: {
                         selectedOption = option.title
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-//                            currentPage += 1 // OnboardingPurposePage
-                        }
                     }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 12)
@@ -68,13 +66,13 @@ struct OnboardingSelectionPage: View {
                                     .scaledToFit()
                                     .frame(width: 24, height: 24)
                                     .foregroundColor(.white)
-
+                                
                                 Text(option.title)
                                     .font(.system(size: 14))
                                     .foregroundColor(.white)
                                     .multilineTextAlignment(.leading)
-                                    .padding(.leading, 8)
-
+                                    .padding(.leading, 5)
+                                
                                 Spacer()
                             }
                             .padding(.horizontal, 8)
@@ -101,9 +99,10 @@ struct OnboardingSelectionPage: View {
                 }
             }
             .padding(.horizontal, 16)
-
-            Spacer(minLength: 10)
+            
+            Spacer()
         }
         .background(Color("BackgroundColor").ignoresSafeArea())
     }
 }
+

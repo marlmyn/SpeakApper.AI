@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+import SwiftUI
+
 struct OnboardingView: View {
     @StateObject var viewModel = OnboardingViewModel()
 
@@ -18,16 +20,18 @@ struct OnboardingView: View {
                         .tag(index)
                 }
             }
-
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            
             if viewModel.currentPage != 0 {
                 PageControl(numberOfPages: viewModel.steps.count, currentPage: $viewModel.currentPage)
                     .padding(.top, -10)
             }
 
-            StartButtonView(viewModel: viewModel)
+            if viewModel.currentPage != 3 {
+                StartButtonView(viewModel: viewModel)
+            }
         }
         .background(Color("BackgroundColor").ignoresSafeArea())
-        
     }
 }
 

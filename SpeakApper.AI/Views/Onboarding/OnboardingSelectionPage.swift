@@ -4,6 +4,7 @@
 //
 //  Created by Akmaral Ergesh on 30.01.2025.
 //
+
 import SwiftUI
 
 struct OnboardingSelectionPage: View {
@@ -13,8 +14,7 @@ struct OnboardingSelectionPage: View {
     
     @Binding var currentPage: Int
     @State private var selectedOption: String?
-    
-    
+
         var body: some View {
                 VStack {
                     

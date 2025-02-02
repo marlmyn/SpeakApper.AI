@@ -10,13 +10,14 @@ import SwiftUI
 struct PaywallView: View {
     @StateObject var viewModel = OnboardingViewModel()
     @State private var currentIndex = 0
+    @Binding var isOnboardingFinished: Bool
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
     
     var body: some View {
         VStack {
             HStack {
                 Button(action: {
-                    
+                    isOnboardingFinished = true // ✅ Закрываем экран и переходим в MainView
                 }) {
                     Image(systemName: "xmark")
                         .foregroundColor(.gray)
@@ -26,7 +27,6 @@ struct PaywallView: View {
                 Spacer()
             }
             
-            // Заголовок
             Text("Выберите план")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.white)
@@ -75,7 +75,6 @@ struct PaywallView: View {
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height * 0.3, alignment: .top)
                     }
                     Spacer()
-                    // Индикаторы
                     HStack {
                         ForEach(0..<paywallSlides.count, id: \.self) { index in
                             Circle()
@@ -89,12 +88,24 @@ struct PaywallView: View {
             .frame(maxHeight: 200)
             
             Spacer()
-            // Блок с подписками
             SubscriptionOptionsView()
             Spacer()
-            StartButtonView(viewModel: viewModel)
             
-            // Нижние условия
+            // ✅ Кнопка "Продолжить без подписки"
+            Button(action: {
+                isOnboardingFinished = true
+            }) {
+                Text("Продолжить без подписки")
+                    .bold()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal, 16)
+            }
+            
+            // Условия
             HStack {
                 Text("Условия использования")
                 Spacer()
@@ -115,10 +126,7 @@ struct PaywallView: View {
             withAnimation {
                 currentIndex = (currentIndex + 1) % paywallSlides.count
             }
-        }.edgesIgnoringSafeArea(.bottom)
+        }
+        .edgesIgnoringSafeArea(.bottom)
     }
-}
-
-#Preview {
-    PaywallView()
 }

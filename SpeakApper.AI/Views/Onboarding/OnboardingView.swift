@@ -11,7 +11,7 @@ struct OnboardingView: View {
     @StateObject var viewModel = OnboardingViewModel()
     @State private var showOnboarding = false
     @State private var isOnboardingFinished = false
-    
+     //
     var body: some View {
         if isOnboardingFinished {
             MainView()
@@ -29,6 +29,7 @@ struct OnboardingView: View {
                         .gesture(DragGesture().onChanged { _ in
                             if viewModel.currentPage != 2 { }
                         })
+                        
                         PageControl(numberOfPages: viewModel.steps.count, currentPage: $viewModel.currentPage)
                             .padding(.top, -10)
                         

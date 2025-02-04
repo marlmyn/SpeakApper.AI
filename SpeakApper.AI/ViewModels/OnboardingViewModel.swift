@@ -4,19 +4,21 @@
 //
 //  Created by Akmaral Ergesh on 29.01.2025.
 //
+
 import SwiftUI
 
 class OnboardingViewModel: ObservableObject {
     @Published var currentPage = 0
     @Published var selectedCategory: String?
+    @Published var selectedPurposes: Set<String> = []
     @Published var showPaywall = false
     
     @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
 
-    let steps: [AnyView] = [
-        AnyView(OnboardingCardView(onboarding: onboardingData[0])),
-        AnyView(OnboardingCardView(onboarding: onboardingData[1])),
-        AnyView(OnboardingSelectionPage(
+    lazy var steps: [AnyView] = [
+        AnyView(OnboardingCardView(onboarding: onboardingData[0])), // Онбординг 1
+        AnyView(OnboardingCardView(onboarding: onboardingData[1])), // Онбординг 2
+        AnyView(OnboardingSelectionPage( // Онбординг 3 - ОДИН выбор
             title: "Какая из категорий лучше всего описывает вас?",
             subtitle: "Ваш отзыв поможет сделать наше приложение лучше!",
             options: [
@@ -29,9 +31,13 @@ class OnboardingViewModel: ObservableObject {
                 OptionModel(title: "Юрист, финансист, консультант", icon: "Vector4"),
                 OptionModel(title: "Другое", icon: "Vector7")
             ],
-            currentPage: .constant(0)
+            currentPage: Binding(
+                get: { self.currentPage },
+                set: { self.currentPage = $0 }
+            ),
+            viewModel: self
         )),
-        AnyView(OnboardingPurposePage(
+        AnyView(OnboardingPurposePage( // Онбординг 4 - НЕСКОЛЬКО выборов
             title: "Для чего вы хотите использовать наше приложение?",
             subtitle: "Ваш отзыв поможет сделать наше приложение еще лучше!",
             options: [
@@ -44,7 +50,11 @@ class OnboardingViewModel: ObservableObject {
                 OptionModel(title: "Писать посты для соцсетей или книги", icon: "Vector16"),
                 OptionModel(title: "Другое", icon: "Vector17")
             ],
-            currentPage: .constant(0)
+            currentPage: Binding(
+                get: { self.currentPage },
+                set: { self.currentPage = $0 }
+            ),
+            viewModel: self 
         ))
     ]
 

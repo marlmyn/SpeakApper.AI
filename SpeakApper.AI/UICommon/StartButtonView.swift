@@ -12,7 +12,7 @@ struct StartButtonView: View {
     
     var body: some View {
         Button(action: {
-            if viewModel.currentPage == 4 {  
+            if viewModel.currentPage == 4 {
                 viewModel.showPaywall = true
             } else {
                 viewModel.nextPage()

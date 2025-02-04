@@ -11,7 +11,7 @@ import SwiftUI
 struct NavigationButton: View {
     let title: String
     let icon: String
-
+    
     var body: some View {
         VStack {
             Image(icon)

@@ -14,8 +14,8 @@ struct OnboardingPurposePage: View {
     let options: [OptionModel]
     
     @Binding var currentPage: Int
-    @State private var selectedOption: String?
-    
+    @ObservedObject var viewModel: OnboardingViewModel
+
     var body: some View {
         VStack(spacing: 16) {
             HStack {
@@ -47,12 +47,17 @@ struct OnboardingPurposePage: View {
             }
             .padding(.horizontal, 12)
             
-            
             // Category Card
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 17), GridItem(.flexible(), spacing: 17)], spacing: 17)  {
-                ForEach(options, id: \.title) { option in
+                ForEach(options, id: \ .title) { option in
                     Button(action: {
-                        selectedOption = option.title
+                        if viewModel.selectedPurposes.contains(option.title) {
+                            viewModel.selectedPurposes.remove(option.title)
+                        } else {
+                            if viewModel.selectedPurposes.count < 3 { 
+                                viewModel.selectedPurposes.insert(option.title)
+                            }
+                        }
                     }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 12)
@@ -77,7 +82,7 @@ struct OnboardingPurposePage: View {
                             }
                             .padding(.horizontal, 8)
                             
-                            if selectedOption == option.title {
+                            if viewModel.selectedPurposes.contains(option.title) {
                                 VStack {
                                     HStack {
                                         Spacer()
@@ -93,7 +98,7 @@ struct OnboardingPurposePage: View {
                         .frame(maxWidth: .infinity, minHeight: 89)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(selectedOption == option.title ? Color("CircleColor") : Color("borderColor"), lineWidth: 0.75)
+                                .stroke(viewModel.selectedPurposes.contains(option.title) ? Color("CircleColor") : Color("borderColor"), lineWidth: 0.75)
                         )
                     }
                 }

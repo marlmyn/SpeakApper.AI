@@ -27,7 +27,7 @@ struct WelcomeScreen: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity) // Добавьте это
+        .frame(maxWidth: .infinity, maxHeight: .infinity) 
         .background(Color("BackgroundColor").ignoresSafeArea())
     }
 }

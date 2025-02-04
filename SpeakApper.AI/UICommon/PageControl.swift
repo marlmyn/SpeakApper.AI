@@ -11,7 +11,7 @@ import SwiftUI
 struct PageControl: UIViewRepresentable {
     var numberOfPages: Int
     @Binding var currentPage: Int
-
+    
     func makeUIView(context: Context) -> UIPageControl {
         let control = UIPageControl()
         control.numberOfPages = numberOfPages
@@ -19,7 +19,7 @@ struct PageControl: UIViewRepresentable {
         control.pageIndicatorTintColor = UIColor.white.withAlphaComponent(0.3)
         return control
     }
-
+    
     func updateUIView(_ uiView: UIPageControl, context: Context) {
         DispatchQueue.main.async {
             uiView.currentPage = currentPage

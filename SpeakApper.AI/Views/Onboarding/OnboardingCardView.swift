@@ -34,6 +34,7 @@ struct OnboardingCardView: View {
                 BulletListView(items: [onboarding.description[0], onboarding.description[1], onboarding.description[2]])
                     .font(.system(size: 16))
                     .foregroundStyle(.white)
+                    .padding(8)
                     Spacer()
                 // BUTTON: START
 //                StartButtonView()

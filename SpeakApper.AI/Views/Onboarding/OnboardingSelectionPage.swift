@@ -14,6 +14,7 @@ struct OnboardingSelectionPage: View {
     
     @Binding var currentPage: Int
     @State private var selectedOption: String?
+    @ObservedObject var viewModel: OnboardingViewModel
 
         var body: some View {
                 VStack {
@@ -54,6 +55,7 @@ struct OnboardingSelectionPage: View {
                         selectedOption = option.title
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
 //                            currentPage += 1 // OnboardingPurposePage
+                            viewModel.nextPage()
                         }
                     }) {
                         ZStack {

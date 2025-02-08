@@ -18,6 +18,7 @@ struct SearchBar: View {
                 .foregroundColor(.white)
                 .placeholder(when: text.isEmpty) {
                     Text("Поиск").foregroundColor(.white)
+                        .frame(height: 54)
                 }
                 .padding(10)
             
@@ -26,7 +27,6 @@ struct SearchBar: View {
         .frame(height: 54)
         .background(Color("searchColor"))
         .cornerRadius(10)
-        .padding(.horizontal)
     }
 }
 

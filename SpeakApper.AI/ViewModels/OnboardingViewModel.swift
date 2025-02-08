@@ -14,7 +14,7 @@ class OnboardingViewModel: ObservableObject {
     @Published var showPaywall = false
     
     @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
-
+    
     lazy var steps: [AnyView] = [
         AnyView(OnboardingCardView(onboarding: onboardingData[0])), // Онбординг 1
         AnyView(OnboardingCardView(onboarding: onboardingData[1])), // Онбординг 2
@@ -36,7 +36,7 @@ class OnboardingViewModel: ObservableObject {
                 set: { self.currentPage = $0 }
             ),
             viewModel: self
-        )),
+                                       )),
         AnyView(OnboardingPurposePage( // Онбординг 4 - НЕСКОЛЬКО выборов
             title: "Для чего вы хотите использовать наше приложение?",
             subtitle: "Ваш отзыв поможет сделать наше приложение еще лучше!",
@@ -54,10 +54,10 @@ class OnboardingViewModel: ObservableObject {
                 get: { self.currentPage },
                 set: { self.currentPage = $0 }
             ),
-            viewModel: self 
+            viewModel: self
         ))
     ]
-
+    
     func nextPage() {
         if currentPage < steps.count - 1 {
             currentPage += 1

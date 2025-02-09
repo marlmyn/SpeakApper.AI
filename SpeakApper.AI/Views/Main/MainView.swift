@@ -11,8 +11,7 @@ struct MainView: View {
     @StateObject private var viewModel = MainViewModel()
     @State private var isRecordingPresented = false
     @State private var hasSavedRecording = false
-    
-    
+
     let navigationItems: [(image: String, title: String, destination: AnyView)] = [
         ("import", "Импорт записи", AnyView(ImportRecordView())),
         ("youtube", "Youtube", AnyView(YoutubeView())),
@@ -27,6 +26,7 @@ struct MainView: View {
                 
                 VStack(alignment: .leading, spacing: 16) {
                     
+                    // Заголовок и иконка настроек
                     HStack {
                         Text("SpeakerApp")
                             .font(.system(size: 21, weight: .bold))
@@ -43,10 +43,12 @@ struct MainView: View {
                     }
                     .padding(.horizontal)
                     
+                    // Поисковая строка
                     SearchBar(text: $viewModel.searchText)
                         .padding(.horizontal)
                         .padding(.bottom, 16)
                     
+                    // Навигационные кнопки
                     HStack(spacing: 36) {
                         ForEach(navigationItems, id: \.title) { item in
                             NavigationLink(destination: item.destination) {
@@ -66,39 +68,64 @@ struct MainView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                     
+                    // Баннер (Premium)
                     BannerView()
                         .padding(.horizontal)
                         .padding(.bottom, 16)
                     
+                    // Список записей под баннером
                     ScrollView {
-                        LazyVStack {
+                        LazyVStack(spacing: 12) {
                             ForEach(viewModel.filteredRecordings()) { recording in
-                                RecordingRow(recording: recording)
-                                    .padding(.horizontal)
+                                RecordingRow(
+                                    recording: recording,
+                                    isPlaying: false,
+                                    onPlay: {
+                                        viewModel.playRecording(recording)
+                                    },
+                                    onDelete: {
+                                        viewModel.deleteRecording(recording)
+                                    }
+                                )
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(10)
+                                .padding(.horizontal)
                             }
                         }
                         .padding(.bottom, 16)
-                        
-                        if !hasSavedRecording {
-                            StartRecordingCard()
-                                .padding(.bottom, 38)
-                        }
                     }
                     
-                    VStack {
-                        Spacer()
-                        RecordingButtonView(isRecordingPresented: $isRecordingPresented, hasSavedRecording: $hasSavedRecording)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 20)
-                    }
-                    
+                    Spacer()
                 }
                 .padding(.top, 16)
+                
+                // Кнопка микрофона по центру внизу с фоном
+                VStack {
+                    Spacer()
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3)) 
+                            .frame(width: 144, height: 144)
+                        
+                        Button(action: {
+                            isRecordingPresented = true
+                        }) {
+                            Image(systemName: "mic.circle.fill")
+                                .resizable()
+                                .frame(width: 110, height: 110)
+                                .foregroundColor(Color("micColor"))
+                        }
+                        .fullScreenCover(isPresented: $isRecordingPresented) {
+                            RecordingView(isPresented: $isRecordingPresented, viewModel: viewModel, hasSavedRecording: $hasSavedRecording)
+                        }
+                    }
+                    .padding(.bottom, 64)
+                }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .fullScreenCover(isPresented: $isRecordingPresented) {
-            RecordingView(isPresented: $isRecordingPresented, viewModel: viewModel, hasSavedRecording: $hasSavedRecording)
+        .onAppear {
+            viewModel.fetchRecordings()
         }
     }
 }

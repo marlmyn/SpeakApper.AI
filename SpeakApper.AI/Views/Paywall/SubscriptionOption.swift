@@ -75,7 +75,7 @@ struct SubscriptionOptionsView: View {
                 )
             }
             
-            // Тумблер "Попробовать бесплатно"
+            // "Попробовать бесплатно"
             Toggle(isOn: $isTrialEnabled) {
                 Text("Попробовать бесплатно")
                     .foregroundColor(.white)

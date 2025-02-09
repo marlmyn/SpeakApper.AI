@@ -11,7 +11,7 @@ import SwiftUI
 struct SpeakApper_AIApp: App {
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
+            MainView()
         }
     }
 }

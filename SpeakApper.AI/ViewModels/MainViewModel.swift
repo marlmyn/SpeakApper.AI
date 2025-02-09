@@ -5,34 +5,56 @@
 //  Created by Akmaral Ergesh on 01.02.2025.
 //
 
+import Foundation
 import SwiftUI
 
-@MainActor
 class MainViewModel: ObservableObject {
-    @Published var searchText: String = ""
-    @Published var recordings: [RecordingModel] = []
+    @Published var searchText = ""
+    @Published var recordings: [Recording] = []
+    
+    let audioRecorder = AudioRecorder()
     
     init() {
-        loadRecordings()
+        fetchRecordings()
     }
     
-    func loadRecordings() {
-        DispatchQueue.main.async {
-            self.recordings = [
-                RecordingModel(id: UUID(), title: "Добро пожаловать в SpeakerApp", image: "time-line", duration: "1:32", timestamp: Date())
-            ]
+    // Загрузка всех записей
+    func fetchRecordings() {
+        audioRecorder.fetchRecordings()
+        recordings = audioRecorder.recordings
+    }
+    
+    // Фильтрация записей по тексту поиска
+    func filteredRecordings() -> [Recording] {
+        if searchText.isEmpty {
+            return recordings
+        } else {
+            return recordings.filter { $0.url.lastPathComponent.localizedCaseInsensitiveContains(searchText) }
         }
     }
     
-    func addRecording(title: String, duration: String) {
-        let newRecording = RecordingModel(id: UUID(), title: title, image: "time-line", duration: duration, timestamp: Date())
-        DispatchQueue.main.async {
-            self.recordings.insert(newRecording, at: 0)
+    // Воспроизведение записи
+    func playRecording(_ recording: Recording) {
+        if audioRecorder.audioPlayer?.isPlaying == true {
+            audioRecorder.stopPlayback()
+        }
+
+        audioRecorder.playRecording(url: recording.url) { success in
+            if success {
+                print("Воспроизведение начато: \(recording.url.lastPathComponent)")
+            }
         }
     }
+
     
-    func filteredRecordings() -> [RecordingModel] {
-        let lowercasedSearch = searchText.lowercased()
-        return searchText.isEmpty ? recordings : recordings.filter { $0.title.lowercased().contains(lowercasedSearch) }
+    // Остановка воспроизведения
+    func stopPlayback() {
+        audioRecorder.stopPlayback()
+    }
+    
+    // Удаление записи
+    func deleteRecording(_ recording: Recording) {
+        audioRecorder.deleteRecording(url: recording.url)
+        fetchRecordings() // Обновляем список после удаления
     }
 }

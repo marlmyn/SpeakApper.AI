@@ -17,7 +17,7 @@ struct PaywallView: View {
         VStack {
             HStack {
                 Button(action: {
-                    isOnboardingFinished = true // ✅ Закрываем экран и переходим в MainView
+                    isOnboardingFinished = true
                 }) {
                     Image(systemName: "xmark")
                         .foregroundColor(.gray)
@@ -91,15 +91,15 @@ struct PaywallView: View {
             SubscriptionOptionsView()
             Spacer()
             
-            // ✅ Кнопка "Продолжить без подписки"
+            // Кнопка "Продолжить без подписки"
             Button(action: {
                 isOnboardingFinished = true
             }) {
-                Text("Продолжить без подписки")
+                Text("Продолжить")
                     .bold()
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color("ButtonColor"))
                     .foregroundColor(.white)
                     .cornerRadius(12)
                     .padding(.horizontal, 16)

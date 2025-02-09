@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct RecordingDetailView: View {
-    let recording: RecordingModel
+    let recording: Recording
     
     var body: some View {
         VStack {
-            Text(recording.title)
+            Text(recording.id)
                 .font(.system(size: 21, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)

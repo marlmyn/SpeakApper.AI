@@ -6,98 +6,151 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct RecordingView: View {
     @Binding var isPresented: Bool
     @ObservedObject var viewModel: MainViewModel
-    @State private var isRecording = false
     @Binding var hasSavedRecording: Bool
-    @State private var recordedTime: Double = 0.0
-    @State private var timer: Timer?
-    
+
+    @State private var recordingTime: TimeInterval = 0
+    @State private var timer: Timer? = nil
+    @State private var isPaused = false
+
+    let maxRecordingDuration: TimeInterval = 120 // 2 минуты
+
     var body: some View {
-        VStack {
-            Text(isRecording ? "Запись идет..." : "Начало записи")
-                .font(.largeTitle)
-                .foregroundColor(.white)
-            
-            Text(timeFormatted(recordedTime))
-                .font(.title)
-                .foregroundColor(.gray)
-            
-            HStack(spacing: 30) {
-                Button(action: {
-                    isPresented = false
-                }) {
-                    Image(systemName: "xmark.circle")
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                        .foregroundColor(.red)
-                }
+        ZStack {
+            Color("BackgroundColor").ignoresSafeArea()
+
+            VStack(spacing: 24) {
+
                 
-                Button(action: {
-                    toggleRecording()
-                }) {
-                    Image(systemName: isRecording ? "pause.circle.fill" : "stop.circle.fill")
-                        .resizable()
-                        .frame(width: 50, height: 50)
-                        .foregroundColor(.blue)
-                }
+                AudioWaveFormView(audioLevels: viewModel.audioRecorder.audioLevels)
+                    .frame(height: 150)
+                    .padding(.top, 60)
+
+                Spacer()
                 
-                Button(action: {
-                    if recordedTime > 3 {
-                        saveRecording()
-                    } else {
+                Text("\(formatTime(recordingTime)) / 2:00")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(.white)
+
+                BannerView()
+                    .padding(.horizontal)
+
+               
+
+                // Кнопки управления записью
+                HStack(spacing: 40) {
+
+                    Button(action: {
+                        stopRecording(delete: true)
                         isPresented = false
+                    }) {
+                        VStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .resizable()
+                                .frame(width: 42, height: 42)
+                                .foregroundColor(Color("xmarkColor"))
+                            Text("Отклонить")
+                                .foregroundColor(.subtitle)
+                                .font(.caption)
+                        }
                     }
-                }) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                        .foregroundColor(recordedTime > 3 ? .green : .gray)
+
+                    // ⏹ Сохранить запись
+                    Button(action: {
+                        stopRecording(delete: false)
+                        hasSavedRecording = true
+                        isPresented = false
+                    }) {
+                        VStack {
+                            Image(systemName: "stop.circle.fill")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(Color("micColor"))
+                            Text("Сохранить")
+                                .foregroundColor(.subtitle)
+                                .font(.caption)
+                        }
+                    }
+
+                    // Пауза/Возобновить
+                    Button(action: {
+                        togglePause()
+                    }) {
+                        VStack {
+                            Image(systemName: isPaused ? "mic.circle.fill" : "pause.circle.fill")
+                                .resizable()
+                                .frame(width: 42, height: 42)
+                                .foregroundColor(Color("xmarkColor"))
+                            Text(isPaused ? "Возобновить" : "Пауза")
+                                .foregroundColor(.subtitle)
+                                .font(.caption)
+                        }
+                    }
                 }
+                .padding(.bottom, 40)
             }
-            .padding(.top, 40)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color("BackgroundColor").ignoresSafeArea())
-        .onAppear {
-            startRecording()
+            .onAppear {
+                startRecording()
+            }
+            .onDisappear {
+                stopRecording(delete: false)
+            }
         }
     }
-    
-    func toggleRecording() {
-        if isRecording {
-            isRecording = false
+
+    // MARK: - Управление записью
+
+    private func startRecording() {
+        viewModel.audioRecorder.startRecording()
+        startTimer()
+    }
+
+    private func stopRecording(delete: Bool) {
+        viewModel.audioRecorder.stopRecording()
+        timer?.invalidate()
+
+        if delete {
+            if let lastRecording = viewModel.audioRecorder.recordings.last {
+                viewModel.audioRecorder.deleteRecording(url: lastRecording.url)
+            }
+        } else {
+            viewModel.fetchRecordings()
+        }
+    }
+
+    private func togglePause() {
+        isPaused.toggle()
+        if isPaused {
+            viewModel.audioRecorder.audioRecorder?.pause()
             timer?.invalidate()
         } else {
-            isRecording = true
+            viewModel.audioRecorder.audioRecorder?.record()
             startTimer()
         }
     }
-    
-    func startRecording() {
-        isRecording = true
-        startTimer()
-    }
-    
-    func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            recordedTime += 1
+
+    private func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if recordingTime < maxRecordingDuration {
+                recordingTime += 1
+            } else {
+                stopRecording(delete: false)
+                isPresented = false
+            }
         }
     }
-    
-    func timeFormatted(_ totalSeconds: Double) -> String {
-        let minutes = Int(totalSeconds) / 60
-        let seconds = Int(totalSeconds) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%01d:%02d", minutes, seconds)
     }
-    
-    func saveRecording() {
-        let title = "Новая запись"
-        let duration = timeFormatted(recordedTime)
-        viewModel.addRecording(title: title, duration: duration)
-        hasSavedRecording = true
-        isPresented = false
-    }
+}
+
+#Preview {
+    RecordingView(isPresented: .constant(true), viewModel: MainViewModel(), hasSavedRecording: .constant(false))
 }

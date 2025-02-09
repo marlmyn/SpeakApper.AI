@@ -103,16 +103,12 @@ struct MainView: View {
                 VStack {
                     Spacer()
                     ZStack {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3)) 
-                            .frame(width: 144, height: 144)
-                        
                         Button(action: {
                             isRecordingPresented = true
                         }) {
-                            Image(systemName: "mic.circle.fill")
+                            Image("Bttn")
                                 .resizable()
-                                .frame(width: 110, height: 110)
+                                .frame(width: 144, height: 144)
                                 .foregroundColor(Color("micColor"))
                         }
                         .fullScreenCover(isPresented: $isRecordingPresented) {

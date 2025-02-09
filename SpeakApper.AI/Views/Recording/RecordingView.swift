@@ -33,42 +33,43 @@ struct RecordingView: View {
                 Spacer()
                 
                 Text("\(formatTime(recordingTime)) / 2:00")
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.system(size: 53, weight: .bold))
                     .foregroundColor(.white)
+                    .padding(.bottom, 48)
 
-                BannerView()
+                AdView()
                     .padding(.horizontal)
+                    .padding(.bottom, 72)
 
                
 
                 // Кнопки управления записью
-                HStack(spacing: 40) {
+                HStack(spacing: 36) {
 
                     Button(action: {
                         stopRecording(delete: true)
                         isPresented = false
                     }) {
                         VStack {
-                            Image(systemName: "xmark.circle.fill")
+                            Image("xmarcBttn")
                                 .resizable()
                                 .frame(width: 42, height: 42)
-                                .foregroundColor(Color("xmarkColor"))
                             Text("Отклонить")
                                 .foregroundColor(.subtitle)
                                 .font(.caption)
                         }
                     }
 
-                    // ⏹ Сохранить запись
+                    // Сохранить запись
                     Button(action: {
                         stopRecording(delete: false)
                         hasSavedRecording = true
                         isPresented = false
                     }) {
                         VStack {
-                            Image(systemName: "stop.circle.fill")
+                            Image("saveBttn")
                                 .resizable()
-                                .frame(width: 60, height: 60)
+                                .frame(width: 56, height: 56)
                                 .foregroundColor(Color("micColor"))
                             Text("Сохранить")
                                 .foregroundColor(.subtitle)
@@ -81,7 +82,7 @@ struct RecordingView: View {
                         togglePause()
                     }) {
                         VStack {
-                            Image(systemName: isPaused ? "mic.circle.fill" : "pause.circle.fill")
+                            Image(isPaused ? "micBttn" : "pauseBttn")
                                 .resizable()
                                 .frame(width: 42, height: 42)
                                 .foregroundColor(Color("xmarkColor"))
@@ -91,7 +92,8 @@ struct RecordingView: View {
                         }
                     }
                 }
-                .padding(.bottom, 40)
+                .padding(.horizontal, 16)
+                //.padding(.bottom, 16)
             }
             .onAppear {
                 startRecording()

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 struct OptionModel {
     let title: String
     let icon: String

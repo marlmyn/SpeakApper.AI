@@ -6,55 +6,66 @@
 //
 
 import Foundation
-import SwiftUI
+import Combine
 
 class MainViewModel: ObservableObject {
-    @Published var searchText = ""
     @Published var recordings: [Recording] = []
-    
+    @Published var searchText: String = ""
+    @Published var transcriptions: [URL: String] = [:]
+
     let audioRecorder = AudioRecorder()
-    
+    private let transcriptionManager = TranscriptionManager()
+
     init() {
         fetchRecordings()
     }
-    
-    // Загрузка всех записей
+
+    // MARK: - Получение записей
     func fetchRecordings() {
         audioRecorder.fetchRecordings()
         recordings = audioRecorder.recordings
+        fetchTranscriptions()
     }
-    
-    // Фильтрация записей по тексту поиска
-    func filteredRecordings() -> [Recording] {
-        if searchText.isEmpty {
-            return recordings
-        } else {
-            return recordings.filter { $0.url.lastPathComponent.localizedCaseInsensitiveContains(searchText) }
-        }
-    }
-    
-    // Воспроизведение записи
-    func playRecording(_ recording: Recording) {
-        if audioRecorder.audioPlayer?.isPlaying == true {
-            audioRecorder.stopPlayback()
-        }
 
-        audioRecorder.playRecording(url: recording.url) { success in
-            if success {
-                print("Воспроизведение начато: \(recording.url.lastPathComponent)")
+    // MARK: - Транскрипция
+    private func fetchTranscriptions() {
+        for recording in recordings {
+            transcriptionManager.transcribeAudio(url: recording.url) { [weak self] transcription in
+                DispatchQueue.main.async {
+                    if let transcription = transcription {
+                        self?.transcriptions[recording.url] = transcription
+                    }
+                }
             }
         }
     }
 
-    
-    // Остановка воспроизведения
-    func stopPlayback() {
-        audioRecorder.stopPlayback()
+    // MARK: - Воспроизведение записи
+    func playRecording(_ recording: Recording) {
+        audioRecorder.playRecording(url: recording.url) { success in
+            if success {
+                print("Воспроизведение начато")
+            } else {
+                print("Ошибка воспроизведения")
+            }
+        }
     }
-    
-    // Удаление записи
+
+    // MARK: - Удаление записи
     func deleteRecording(_ recording: Recording) {
         audioRecorder.deleteRecording(url: recording.url)
-        fetchRecordings() // Обновляем список после удаления
+        fetchRecordings()
+    }
+
+    // MARK: - Фильтрация записей
+    func filteredRecordings() -> [Recording] {
+        if searchText.isEmpty {
+            return recordings
+        } else {
+            return recordings.filter {
+                $0.formattedDate.localizedCaseInsensitiveContains(searchText) ||
+                $0.url.lastPathComponent.localizedCaseInsensitiveContains(searchText)
+            }
+        }
     }
 }

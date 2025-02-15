@@ -6,35 +6,22 @@
 //
 
 import Foundation
-import SwiftUI
-import Combine
 
 struct Recording: Identifiable, Equatable {
-    let id: String 
+    let id = UUID()
     let url: URL
     let date: Date
     let sequence: Int
-    
-    init(url: URL, date: Date, sequence: Int) {
-        self.id = url.path
-        self.url = url
-        self.date = date
-        self.sequence = sequence
-    }
-    
-    static let dateFormatter: DateFormatter = {
+    var transcription: String?
+
+    var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter
-    }()
-
-    var formattedDate: String {
-        return Recording.dateFormatter.string(from: date)
+        return formatter.string(from: date)
     }
-    
+
     static func == (lhs: Recording, rhs: Recording) -> Bool {
         return lhs.id == rhs.id
     }
 }
-

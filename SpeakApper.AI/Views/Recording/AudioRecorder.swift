@@ -8,20 +8,21 @@
 import Foundation
 import SwiftUI
 import AVFoundation
+import Speech
 
-//Observable class responsible for handling audio recording and playback
 class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     @Published var recordings: [Recording] = []
     @Published var audioLevels: [CGFloat] = Array(repeating: 20, count: 30)
+    
+    @ObservedObject var transcriptionManager = TranscriptionManager()
     
     var audioRecorder: AVAudioRecorder?
     var audioPlayer: AVAudioPlayer?
     
     private var meterTimer: Timer?
     
-    //Starts recording audio
+    // MARK: - Start Recording
     func startRecording() {
-        // Настройка AVAudioSession
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
@@ -31,12 +32,11 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudi
             return
         }
         
-        //
         let sequence = (recordings.last?.sequence ?? 0) + 1
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         let dateString = formatter.string(from: Date())
-        let fileName = "Recording_ \(sequence)_\(dateString).m4a"
+        let fileName = "Recording_\(sequence)_\(dateString).m4a"
         
         let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
         
@@ -51,30 +51,31 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudi
             audioRecorder = try AVAudioRecorder(url: path, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.record() //Start recording
-            
+            audioRecorder?.record()
             print("Запись будет сохранена сюда: \(path)")
-            
-            //Start Meter Timer
             startMeterTimer()
         } catch {
-            print("Failed to start recording: \(error.localizedDescription)")
+            print("Не удалось начать запись: \(error.localizedDescription)")
         }
     }
-    //Stops the current recording session
+    
+    // MARK: - Stop Recording
     func stopRecording() {
         audioRecorder?.stop()
         audioRecorder = nil
-        
-        //Start Meter Timer
         stopMeterTimer()
         fetchRecordings()
+
+        if let lastRecording = recordings.last {
+            transcriptionManager.transcribeAudio(url: lastRecording.url) { transcription in
+                print("Транскрипция: \(transcription ?? "Нет данных")")
+            }
+        }
     }
     
-    //fetches all recordings from the document directory
+    // MARK: - Fetch Recordings
     func fetchRecordings() {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        
         
         do {
             let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey], options: .skipsHiddenFiles)
@@ -91,11 +92,11 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudi
             }
             recordings = fetchedRecordings.sorted(by: { $0.sequence < $1.sequence })
         } catch {
-            print("Failed to fetch recordings: \(error.localizedDescription)")
+            print("Не удалось получить записи: \(error.localizedDescription)")
         }
     }
     
-    //Plays the selected recording
+    // MARK: - Playback
     func playRecording(url: URL, completion: @escaping(Bool) -> Void) {
         stopPlayback()
         
@@ -105,52 +106,44 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudi
             audioPlayer?.play()
             completion(true)
         } catch {
-            print("Failed to fetch recordings: \(error.localizedDescription)")
+            print("Не удалось воспроизвести запись: \(error.localizedDescription)")
             completion(false)
         }
     }
     
-    //Stops the current playback
     func stopPlayback() {
         audioPlayer?.stop()
         audioPlayer = nil
     }
     
-    
-    //Deletes a specified recording
-    //Parameter url: The URL of the recording to delete
+    // MARK: - Delete Recording
     func deleteRecording(url: URL) {
         do {
             try FileManager.default.removeItem(at: url)
             fetchRecordings()
         } catch {
-            print("Failed to delete recording: \(error.localizedDescription)")
+            print("Не удалось удалить запись: \(error.localizedDescription)")
         }
     }
     
-    //MARK: - Metering Timer
-    
-    //Starts the metering timer to update audio levels
+    // MARK: - Meter Timer
     private func startMeterTimer() {
         meterTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             self?.updateAudioLevels()
         }
     }
     
-    //Stops the metering timer
     private func stopMeterTimer() {
         meterTimer?.invalidate()
         meterTimer = nil
     }
     
-    //Updates the audio levels by reading from the audio recorder
     private func updateAudioLevels() {
         guard let recorder = audioRecorder else { return }
         recorder.updateMeters()
         let averagePower = recorder.averagePower(forChannel: 0)
         let normalizedLevel = self.normalizedPowerLevel(fromDecibels: averagePower)
         
-        //Update the audioLevels array
         DispatchQueue.main.async {
             self.audioLevels.append(normalizedLevel)
             if self.audioLevels.count > 30 {
@@ -159,32 +152,27 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AVAudi
         }
     }
     
-    //Converts decibel power to a normalized level (0.0 - 1.0)
     private func normalizedPowerLevel(fromDecibels decibels: Float) -> CGFloat {
         if decibels < -80 {
             return 0.0
         } else if decibels >= 0 {
             return 1.0
         } else {
-            let level = (decibels + 80) / 80
-            return CGFloat(level)
+            return CGFloat((decibels + 80) / 80)
         }
     }
-    
-    //MARK: - AVAudioRecorderDelegate Methods
-    
+
+    // MARK: - AVAudioRecorderDelegate
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if flag {
             fetchRecordings()
         } else {
-            print("Recording was not successful.")
+            print("Запись не удалась.")
         }
     }
-    
-    //MARK: - AVAudioPlayerDelegate Methods
+
+    // MARK: - AVAudioPlayerDelegate
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        //Notify that playback has finished
         NotificationCenter.default.post(name: .playbackFinished, object: nil)
     }
 }
-

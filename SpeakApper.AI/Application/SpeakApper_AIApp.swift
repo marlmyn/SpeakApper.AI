@@ -6,14 +6,19 @@
 //
 
 import SwiftUI
+import Firebase
 
 @main
 struct SpeakApper_AIApp: App {
     let dependencies = Dependencies()
     
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
+            MainView()
         }
     }
 }

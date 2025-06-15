@@ -8,27 +8,58 @@
 import Foundation
 import Combine
 
-typealias MainDependencies =
-    HasRecordingUseCase
+typealias MainDependencies = HasRecordingUseCase
 
 @Observable
 final class MainViewModel {
     @ObservationIgnored private let recordingUseCase: RecordingUseCaseProtocol
+    @ObservationIgnored private let transcriptionManager: TranscriptionManager
     @ObservationIgnored private(set) var recordingItemsViewModels: [RecordingItemViewModel] = []
-    
+
+    // MARK: — Поиск
+    /// Текст для фильтрации записей
     var searchText: String = ""
-    
-    var hasRecordings: Bool {
-        !recordingItemsViewModels.isEmpty
+    /// Отфильтрованные элементы по тексту поиска
+    var filteredRecordingItemsViewModels: [RecordingItemViewModel] {
+        guard !searchText.isEmpty else {
+            return recordingItemsViewModels
+        }
+        return recordingItemsViewModels.filter { vm in
+            vm.title.localizedCaseInsensitiveContains(searchText)
+        }
     }
-    
-    var hasSubscription: Bool {
-        false
-    }
-    
-    init(dependencies: MainDependencies) {
+
+    // MARK: — Состояния
+    var hasRecordings: Bool { !recordingItemsViewModels.isEmpty }
+    var hasSubscription: Bool { false /* TODO: реальная логика подписки */ }
+
+    // MARK: — Инициализация
+    init(
+        dependencies: MainDependencies,
+        transcriptionManager: TranscriptionManager = .shared
+    ) {
         self.recordingUseCase = dependencies.recordingUseCase
-        
-        recordingItemsViewModels = [RecordingItemViewModel(model: .init(url: URL(string: "https://www.youtube.com")!, date: Date(), sequence: 23, transcription: nil))]
+        self.transcriptionManager = transcriptionManager
+        reloadRecordings()
     }
+
+    // MARK: — Работа с записями
+    func reloadRecordings() {
+        let recordings = recordingUseCase.getRecordings()
+        self.recordingItemsViewModels = recordings.map { RecordingItemViewModel(model: $0) }
+    }
+
+    func appendRecording(_ recording: Recording) {
+        let vm = RecordingItemViewModel(model: recording)
+        recordingItemsViewModels.insert(vm, at: 0)
+    }
+
+    func delete(_ item: RecordingItemViewModel) {
+        recordingUseCase.deleteRecording(url: item.model.url)
+        recordingItemsViewModels.removeAll { $0.model.url == item.model.url }
+    }
+
+    // MARK: — Premium
+    func purchasePremium() { /* TODO: StoreKit */ }
+    func restorePurchases() { /* TODO: StoreKit.restorePurchases */ }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RecordingItemView: View {
-    let viewModel: RecordingItemViewModel
+    @ObservedObject var viewModel: RecordingItemViewModel
     
     var body: some View {
         contentBodyView
@@ -36,6 +36,7 @@ fileprivate extension RecordingItemView {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.recordingItem)
+        .padding(.vertical, 8)
         )
     }
     

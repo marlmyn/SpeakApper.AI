@@ -11,91 +11,84 @@ struct MainView: View {
     @Bindable var viewModel: MainViewModel
     @Environment(Coordinator.self) var coordinator
     
+    @State private var isSearching = false
+    @FocusState private var searchFieldIsFocused: Bool
+    
+    @State private var itemToDelete: RecordingItemViewModel?
+    @State private var showingDeleteAlert = false
+    
     var body: some View {
-        contentBodyView
-    }
-}
-
-fileprivate extension MainView {
-    var contentBodyView: some View {
         VStack(spacing: 16) {
             headerView
             
-            scrollableView
+            searchBarView
             
-            Spacer()
+            if !viewModel.hasSubscription {
+                buyPremiumView
+            }
+            
+            quickActionsView
+                .padding(.vertical, 16)
+            
+            recordingsView
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .background(Color(.background).ignoresSafeArea())
         .overlay(alignment: .bottom) {
             VStack(spacing: 38) {
-                if !viewModel.hasRecordings {
+                if viewModel.recordingItemsViewModels.isEmpty {
                     recordingTipView
+                        .padding(.horizontal, 16)
                 }
-                
                 startRecordingButtonView
             }
             .padding(.bottom, 30)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .background(
-            Color(.background)
-                .ignoresSafeArea()
-        )
-    }
-
-    var headerView: some View {
-        HStack(spacing: 0) {
-            Text("SpeakerApp")
-                .font(.system(size: 21, weight: .bold))
-                .foregroundColor(.white)
-            
-            Spacer()
-            
-            Button {
-                coordinator.push(.settings)
-            } label: {
-                Image(.settings)
-                    .resizable()
-                    .frame(width: 24, height: 24)
+        
+        .alert("Удалить запись?", isPresented: $showingDeleteAlert, presenting: itemToDelete) { item in
+            Button("Удалить", role: .destructive) {
+                viewModel.delete(item)
             }
+            Button("Отмена", role: .cancel) {}
         }
     }
-    
-    var scrollableView: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 16) {
-                searchBarView
-                
-                if !viewModel.hasSubscription {
-                    buyPremiumView
-                }
-                
-                quickActionsView
-                    .padding(.vertical, 16)
-                
-                recordingsView
+}
+
+fileprivate extension MainView {
+    var headerView: some View {
+        HStack {
+            Text("SpeakApper")
+                .font(.system(size: 21, weight: .bold))
+                .foregroundColor(.white)
+            Spacer()
+            Button { coordinator.push(.settings) } label: {
+                Image(.settings).resizable().frame(width: 24, height: 24)
             }
         }
     }
     
     var searchBarView: some View {
-        HStack(spacing: 16) {
-            Image(.mangnifyingglass)
-            
-            TextField("", text: $viewModel.searchText, prompt: Text("Поиск").foregroundColor(.white))
-                .font(.system(size: 17))
-                .foregroundColor(.white)
+        NavigationLink(destination: SearchView(viewModel: viewModel)) {
+            HStack(spacing: 16) {
+                Image(.mangnifyingglass)
+                    .foregroundColor(.white.opacity(0.7))
+                Text("Поиск")
+                    .foregroundColor(.white.opacity(0.7))
+                Spacer()
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(Color("searchColor"))
+            .cornerRadius(10)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 54)
-        .background(Color("searchColor"))
-        .cornerRadius(10)
+        .buttonStyle(.plain)
     }
+    
     
     var buyPremiumView: some View {
         HStack(spacing: 4) {
             Image(.premiumLightning)
-            
             Text("Попробуйте SpeakApper Premium бесплатно\nНажмите, чтобы попробовать сейчас!")
                 .font(.system(size: 15))
                 .foregroundColor(.white)
@@ -105,30 +98,62 @@ fileprivate extension MainView {
         .padding(.vertical, 16)
         .padding(.horizontal, 8)
         .background(
-            LinearGradient(colors: [Color(hex: "#6D4BCC"), Color(hex: "#5B51C9"), Color(hex: "#9856EA")],
-                           startPoint: .leading,
-                           endPoint: .trailing)
+            LinearGradient(
+                colors: [Color(hex: "#6D4BCC"), Color(hex: "#5B51C9"), Color(hex: "#9856EA")],
+                startPoint: .leading, endPoint: .trailing
+            )
         )
         .cornerRadius(10)
     }
     
     var quickActionsView: some View {
         HStack(alignment: .top, spacing: 27) {
-            ForEach(QuickActionType.allCases, id: \.self) { actionType in
-                QuickActionView(actionType: actionType)
-                    .onTapGesture {
-                        coordinator.presentSheet(actionType.sheet)
-                    }
+            ForEach(mainQuickActions, id: \.self) { action in
+                QuickActionView(
+                    actionType: action,
+                    useShortTitle: true,
+                    isHorizontal: true,
+                    iconColor: Color(hex: "#7B87FF")
+                ) { selectedAction in
+                    coordinator.presentSheet(selectedAction.sheet)
+                }
             }
         }
     }
     
+    
     var recordingsView: some View {
-        LazyVStack(spacing: 24) {
-            ForEach(viewModel.recordingItemsViewModels, id: \.self) { viewModel in
-                RecordingItemView(viewModel: viewModel)
+        List {
+            ForEach(viewModel.recordingItemsViewModels, id: \.model.url) { itemVM in
+                Button {
+                    coordinator.push(.detail(recording: itemVM.model))
+                } label: {
+                    RecordingItemView(viewModel: itemVM)
+                        .frame(height: 68)
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .listRowInsets(EdgeInsets(
+                    top: 0,
+                    leading: 0,
+                    bottom: 0,
+                    trailing: 0
+                ))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color(.background))
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        itemToDelete = itemVM
+                        showingDeleteAlert = true
+                    } label: {
+                        Label("Удалить", systemImage: "trash")
+                    }
+                }
             }
         }
+        .scrollContentBackground(.hidden)
+        .listStyle(.plain)
+        .onAppear { viewModel.reloadRecordings() }
     }
     
     var recordingTipView: some View {
@@ -155,12 +180,10 @@ fileprivate extension MainView {
     }
     
     var startRecordingButtonView: some View {
-        Button {
-            coordinator.push(.recording)
-        } label: {
+        Button { coordinator.push(.recording) } label: {
             Image(.startRecordingButton)
                 .overlay(alignment: .bottom) {
-                    startRecordingButtonTipView
+                    Image(.startRecordingButtonTip)
                         .offset(x: 0, y: 24)
                 }
         }
@@ -169,4 +192,5 @@ fileprivate extension MainView {
     var startRecordingButtonTipView: some View {
         Image(.startRecordingButtonTip)
     }
+    
 }
